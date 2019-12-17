@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport"content="initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Some Measurables of Food Insecurity in Ohio Appalachian Region</title>
+<style>
+    html, body { 
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        }
+    #viewDiv1{
+        padding: 0;
+            float: left;
+            left: 0;
+        margin: 0;
+        height: 100%;
+        width: 49.5%; 
+    }
+   
+    #titleDiv{
+            float: left;
+            height: 25px;
+        width: 49.5%;
+        background-color: black;
+            color: white;
+            text-align: center;
+            padding-right: 0.5%;
+            font-weight: 400;
+            font-size: 25px;
+    }
+    h2 {
+        text-align: ;
+            color: white;
+            float: right;
+    }
+    #header {
+        width: 100%;
+        background-color: lightcoral;
+        height: 10%;
+        text-align: center;
+        color: white;
+    }
+    
+    #maps {
+        float: right;
+        right: 0;
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+    }
+    #viewDiv {
+        float: right;
+        right: 0;
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 49.5%;
+    }
+    #viewDiv2 {
+        float: top;
+        right: 0;
+        padding: 0;
+        margin: 0;
+        height: 47.5%;
+        width: 100%;
+    }
+    #viewDiv3 {
+        float: bottom;
+        right: 0;
+        padding: 0;
+        margin: 0;
+        height: 47.5%;
+        width: 100%;
+    }
+    
+    #subtitleDiv {
+        float: bottom;
+        right: 0;
+        padding: 0;
+        margin: 0;
+        height: 5%;
+        width: 100%;
+        background-color: black;
+        height: 5%;
+        text-align: center;
+        color: white;
+        font-weight: 400;
+            font-size: 25px;
+    }
+    #extentDiv {
+        border: 2px solid red;
+        position: absolute;
+        z-index: 2;
+    }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.12/esri/css/main.css">
+    <script src="https://js.arcgis.com/4.12/"></script>
+    
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/widgets/LayerList",
+            
+            "esri/symbols/SimpleFillSymbol",
+            "esri/renderers/SimpleRenderer",
+            "esri/core/watchUtils",
+            "dojo/dom",
+            "dojo/promise/all",
+            "dojo/domReady!"
+            ], 
+            function(Map, MapView, FeatureLayer, LayerList, SimpleFillSymbol, SimpleRenderer, watchUtils,dom,all)
+                {
+            var map = new Map({
+                basemap: "topo"
+            });
+            
+            var view1 = new MapView({
+                container: "viewDiv1",
+                map: map,
+                zoom: 7,
+                center: [-82.21667, 40]
+            });
+            
+            var map2 = new Map({
+                basemap: "topo"    
+            });
+            
+            var view2 = new MapView({
+                container: "viewDiv2",
+                map: map2,
+                zoom: 6,
+                center: [-82.21667, 40],
+            });
+            var map3 = new Map({
+                basemap: "topo"    
+            });
+            
+            var view3 = new MapView({
+                container: "viewDiv3",
+                map: map3,
+                zoom: 6,
+                center: [-82.21667, 40],
+            });
+        var foodlocations = new FeatureLayer({
+            portalItem: {
+                    id: "68ea927324334c26a4c7502bd8e54c38"},
+            
+            title: "Food Locations"
+            
+        });
+    
+        map.add(foodlocations); 
+            
+         var popDensity = new FeatureLayer({
+                portalItem: {
+                    id: "57c93f0ae6f546fb9df137aef1d43a78"},
+             
+             title: "Population Density"
+             
+                });
+         map3.add(popDensity);
+            
+        var income = new FeatureLayer({
+            portalItem: {
+                    id: "9e9134f9fbc5467886600b497a7f878d"},
+            
+            title: "Income"
+        });
+    
+        map2.add(income); 
+        
+            
+        var synchronizeView = function(view,others){
+            other=Array.isArray(others)? others: [others];
+                var viewpointWatchHandle;
+                var viewStationaryHandle;
+                var otherInteractHandlers;
+                var scheduleId;
+            
+                var clear=function(){
+                    if (otherInteractHandlers){
+                        otherInteractHandlers.forEach(function(handle){
+                            handle.remove();
+        });
+                    }
+                    
+            viewpointWatchHandle && viewpointWatchHandle.remove();
+            viewStationaryHandle && viewStationaryHandle.remove();
+            scheduleId && clearTimeout(scheduleId);
+             otherInteractHandlers = 
+                    viewpointWatchHandle=viewStationaryHandle=scheduleId=null;
+                };
+            var interactWatcher = 
+            view.watch('interacting,animation',function(newValue){
+                if(!newValue){
+                    return;
+                }
+                if(viewpointWatchHandle || scheduleId){
+                    return;
+                }
+                scheduleId=setTimeout(function(){
+                    scheduleId=null;
+                    
+                    viewpointWatchHandle=view.watch('viewpoint',function(newValue){
+                        others.forEach(function(otherView){
+                            otherView.viewpoint=newValue;
+                        });
+                    });
+                });
+                
+                const layerList1 = new LayerList({
+                    view:view1,
+                    listItemCreatedFunction: function(event){
+                        const item = event.item;
+                        if (item.layer.type !="group"){
+                            item.panel ={
+                                content: "legend",
+                                open: true
+                            };
+                        }
+                    }
+                });
+                
+                view1.ui.add(layerList1, {position: "top-left", index:2});
+                
+                const layerList2 = new LayerList({
+                    view: view2,
+                    listItemCreatedFunction: function(event){
+                        const item = event.item;
+                        if (item.layer.type !="group"){
+                            item.panel ={
+                                content: "legend",
+                                open: true,
+                                collapse: true
+                            };
+                        }
+                    }
+                });
+                
+                view2.ui.add(layerList2, {position: "top-left", index:2});
+                
+                 const layerList3 = new LayerList({
+                     view: view3,
+                    listItemCreatedFunction: function(event){
+                        const item = event.item;
+                        if (item.layer.type !="group"){
+                            item.panel ={
+                                content: "legend",
+                                open: true
+                            };
+                        }
+                    }
+                });
+                
+             view3.ui.add(layerList3, {position: "top-left", index:2});
+                
+                viewStationaryHandle = watchUtils.whenTrue(view1,'stationary',clear);
+            });
+            return {
+                remove: function() {
+                    this.remove = function() {};
+                    clear();
+                    interactWatcher.remove();
+                }
+            }
+        };
+        
+        var synchronizeViews = function(views) {
+            var handles = 
+                views.map(function(view1,idx,views) {
+                    var others = views.concat();
+                    others.splice(idx, 1);
+                    return synchronizeView(view1,others);
+                });
+            return {
+                remove: function(){
+                    this.remove = function(){};
+                    handles.forEach(function(h){
+                        h.remove();
+                    });
+                    handles = null;
+                }
+            }
+        }
+        
+        synchronizeViews([view1,view2, view3]);
+        
+        });
+        
+    </script>
+    </head>
+    <body>
+        <div id="header"; style="display: table; height: 15px; overflow: hidden;"><h1 style="vertical-align: middle">Some Measurables of Food Insecurity in Ohio Appalachian Region</h1></div> 
+        <div id = "titleDiv">Food Locations</div>
+        <div id = "titleDiv">Income</div>
+        <div id = "maps"><div id = "viewDiv1"></div>
+        <div id = "viewDiv"><div id = "viewDiv2"></div><div id = "subtitleDiv">Population Density</div>
+            <div id = "viewDiv3"></div></div></div>
+    </body>
+    </html>
+    
